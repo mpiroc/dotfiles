@@ -18,8 +18,9 @@ link() {
   echo "Linked $dst → $src"
 }
 
-link "$DOTFILES_DIR/claude/settings.json" "$CLAUDE_DIR/settings.json"
-link "$DOTFILES_DIR/claude/CLAUDE.md"     "$CLAUDE_DIR/CLAUDE.md"
+link "$DOTFILES_DIR/claude/settings.json"          "$CLAUDE_DIR/settings.json"
+link "$DOTFILES_DIR/claude/CLAUDE.md"              "$CLAUDE_DIR/CLAUDE.md"
+link "$DOTFILES_DIR/claude/statusline-command.sh"  "$CLAUDE_DIR/statusline-command.sh"
 
 # Symlink each agent file individually so user-local agents are preserved.
 for agent in "$DOTFILES_DIR/claude/agents/"*; do
