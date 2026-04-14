@@ -29,4 +29,18 @@ for agent in "$DOTFILES_DIR/claude/agents/"*; do
   link "$agent" "$CLAUDE_DIR/agents/$(basename "$agent")"
 done
 
+# Source shell aliases from shell profile files that exist.
+ALIASES_SRC="$DOTFILES_DIR/shell/aliases.sh"
+SOURCE_LINE=". \"$ALIASES_SRC\""
+
+for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+  [ -f "$rc" ] || continue
+  if ! grep -qF "$ALIASES_SRC" "$rc"; then
+    printf '\n# dotfiles aliases\n%s\n' "$SOURCE_LINE" >> "$rc"
+    echo "Added source line to $rc"
+  else
+    echo "Source line already in $rc"
+  fi
+done
+
 echo "Done."
