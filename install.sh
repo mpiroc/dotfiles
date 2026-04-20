@@ -6,6 +6,7 @@ CLAUDE_DIR="$HOME/.claude"
 
 mkdir -p "$CLAUDE_DIR"
 mkdir -p "$CLAUDE_DIR/agents"
+mkdir -p "$CLAUDE_DIR/skills"
 
 # Symlink a file, backing up any existing non-symlink target.
 link() {
@@ -27,6 +28,13 @@ for agent in "$DOTFILES_DIR/claude/agents/"*; do
   [ "$(basename "$agent")" = ".gitkeep" ] && continue
   [ -e "$agent" ] || continue
   link "$agent" "$CLAUDE_DIR/agents/$(basename "$agent")"
+done
+
+# Symlink each skill directory individually so user-local skills are preserved.
+for skill in "$DOTFILES_DIR/claude/skills/"*; do
+  [ "$(basename "$skill")" = ".gitkeep" ] && continue
+  [ -e "$skill" ] || continue
+  link "$skill" "$CLAUDE_DIR/skills/$(basename "$skill")"
 done
 
 # Source shell aliases from shell profile files that exist.
