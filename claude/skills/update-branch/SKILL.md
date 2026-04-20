@@ -1,0 +1,56 @@
+---
+name: update-branch
+description: Update the current branch with the latest changes from upstream. Detects the merge strategy, resolves conflicts, validates locally, pushes, and monitors CI. Use when the user asks to update, sync, or rebase their branch.
+user-invocable: true
+argument-hint: "[target-branch]"
+---
+
+# Update Branch
+
+Update the current branch with the latest changes from upstream.
+
+## Procedure
+
+### Step 1: Detect Merge Strategy
+
+Use the `detect-merge-strategy` skill to determine the target branch and whether to rebase or merge. If the user provided a target branch as an argument, pass that as conversation context to `detect-target-branch`.
+
+### Step 2: Fetch Latest
+
+```bash
+git fetch origin
+```
+
+### Step 3: Apply Upstream Changes
+
+- If the strategy is **rebase**: `git rebase <target-branch>`
+- If the strategy is **merge**: `git merge <target-branch>`
+
+### Step 4: Resolve Conflicts
+
+If there are merge conflicts:
+
+1. Read each conflicted file and understand both sides of the conflict
+2. Resolve the conflict by choosing the correct resolution based on the intent of both changes
+3. Stage the resolved file
+4. Continue the rebase (`git rebase --continue`) or commit the merge
+
+Repeat until all conflicts are resolved. If a conflict is ambiguous and you cannot determine the correct resolution with confidence, stop and ask the user.
+
+### Step 5: Local Validation
+
+Run the project's local validation to catch issues before pushing. Look for:
+- A `Makefile` with a `check`, `validate`, or `test` target
+- A `package.json` with `lint`, `typecheck`, `test`, or `check` scripts
+- A project-level `CLAUDE.md` that specifies validation commands
+
+Run whatever is appropriate for the project. If validation fails, fix the issues and re-validate before proceeding.
+
+### Step 6: Push
+
+- If the strategy was **merge**: `git push`
+- If the strategy was **rebase**: `git push --force-with-lease`
+
+### Step 7: Monitor CI
+
+Use the `dev-workflow:monitor-ci` skill to monitor CI checks on the current branch. If any checks fail, investigate the failures, fix them, and push again. Repeat until CI passes.
