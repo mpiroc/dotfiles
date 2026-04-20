@@ -11,12 +11,12 @@ alias ucs='pushd /workspaces/.codespaces/.persistedshare/dotfiles/ && git pull &
 unalias ucc 2>/dev/null
 _detect_package_manager() {
   if [ -f pnpm-lock.yaml ]; then
-    pnpm setup
+    pnpm setup >&2
     echo pnpm
   elif [ -f package-lock.json ]; then
     echo npm
   elif command -v pnpm >/dev/null 2>&1; then
-    pnpm setup
+    pnpm setup >&2
     echo pnpm
   else
     echo npm
