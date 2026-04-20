@@ -1,0 +1,36 @@
+---
+name: detect-merge-strategy
+description: Determine whether to pull in upstream changes via rebase or merge, based on whether the current branch contains merge commits. Use when pulling, syncing, or updating a branch from its target.
+user-invocable: false
+---
+
+# Detect Merge Strategy
+
+Determine whether to use rebase or merge when pulling in upstream changes.
+
+## Procedure
+
+### Step 1: Detect Target Branch
+
+Use the `detect-target-branch` skill to determine the target branch.
+
+### Step 2: Check for Merge Commits
+
+Run the helper script, passing the detected target branch as an argument:
+
+```bash
+bash "$(dirname "$(readlink -f ~/.claude/skills/detect-merge-strategy/SKILL.md)")/detect-merge-strategy.sh" "<target-branch>"
+```
+
+The script checks for merge commits between the merge-base and HEAD:
+- If merge commits exist, it selects **merge** (rebasing would flatten them)
+- If no merge commits exist, it selects **rebase** (for a clean linear history)
+
+## Output Format
+
+After detection, emit the result in exactly this format:
+
+```
+**Merge strategy:** `<rebase|merge>`
+**Reason:** <reason>
+```
