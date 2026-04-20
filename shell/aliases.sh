@@ -23,7 +23,8 @@ _detect_package_manager() {
   fi
 }
 ucc() {
-  git pull || return 1
+  # Pull latest changes, non-fatal (e.g. may fail if offline)
+  git pull || true
   local pm
   pm=$(_detect_package_manager)
   # Local install: only when package.json exists, non-fatal
