@@ -8,6 +8,7 @@ alias ucs='pushd /workspaces/.codespaces/.persistedshare/dotfiles/ && git pull &
 # installs local dependencies (if applicable), and updates Claude Code to
 # the latest version globally. Detects the package manager from lockfiles
 # (pnpm-lock.yaml or package-lock.json), defaulting to pnpm with npm fallback.
+unalias ucc 2>/dev/null
 _detect_package_manager() {
   if [ -f pnpm-lock.yaml ]; then
     echo pnpm
