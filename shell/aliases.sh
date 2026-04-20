@@ -6,17 +6,27 @@ alias ucs='pushd /workspaces/.codespaces/.persistedshare/dotfiles/ && git pull &
 # ucc - [U]pdate [C]laude [C]ode
 # Intended to be run at the start of a work day. Pulls the latest changes,
 # installs local dependencies (if applicable), and updates Claude Code to
-# the latest version globally. Falls back to npm if pnpm is unavailable.
+# the latest version globally. Detects the package manager from lockfiles
+# (pnpm-lock.yaml or package-lock.json), defaulting to pnpm with npm fallback.
+_detect_package_manager() {
+  if [ -f pnpm-lock.yaml ]; then
+    echo pnpm
+  elif [ -f package-lock.json ]; then
+    echo npm
+  elif command -v pnpm >/dev/null 2>&1; then
+    echo pnpm
+  else
+    echo npm
+  fi
+}
 ucc() {
   git pull || return 1
+  local pm
+  pm=$(_detect_package_manager)
   # Local install: only when package.json exists, non-fatal
   if [ -f package.json ]; then
-    pnpm i || true
+    "$pm" i || true
   fi
-  # Global install: prefer pnpm, fall back to npm
-  if command -v pnpm >/dev/null 2>&1 && [ -f pnpm-lock.yaml ] && pnpm i -g @anthropic-ai/claude-code; then
-    node "$(pnpm root -g)/@anthropic-ai/claude-code/install.cjs"
-  else
-    npm i -g @anthropic-ai/claude-code && node "$(npm root -g)/@anthropic-ai/claude-code/install.cjs"
-  fi
+  # Global install
+  "$pm" i -g @anthropic-ai/claude-code && node "$("$pm" root -g)/@anthropic-ai/claude-code/install.cjs"
 }
