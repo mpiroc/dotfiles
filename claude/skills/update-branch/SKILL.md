@@ -1,6 +1,7 @@
 ---
 name: update-branch
-description: Update the current branch with the latest changes from upstream. Detects the merge strategy, resolves conflicts, validates locally, pushes, and monitors CI. Use when the user asks to update, sync, or rebase their branch.
+description: Update the current branch with the latest changes from upstream, end to end.
+when_to_use: "When the user asks to: update their branch, sync with main, pull latest changes, rebase on main, merge main into their branch, or catch up with upstream. Handles strategy detection, conflict resolution, validation, push, and CI monitoring."
 user-invocable: true
 argument-hint: "[target-branch]"
 ---

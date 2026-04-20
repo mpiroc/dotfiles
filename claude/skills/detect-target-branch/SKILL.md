@@ -1,6 +1,7 @@
 ---
 name: detect-target-branch
-description: Detect the target branch (merge base) for the current git branch. Use when determining the base branch for diffs, PR creation, or branch comparison.
+description: Detect the target branch (merge base) for the current git branch.
+when_to_use: When determining the base branch for diffs, PR creation, branch comparison, or upstream sync. When another skill needs to know what branch the current branch will merge into.
 user-invocable: false
 ---
 

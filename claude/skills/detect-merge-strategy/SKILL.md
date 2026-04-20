@@ -1,6 +1,7 @@
 ---
 name: detect-merge-strategy
-description: Determine whether to pull in upstream changes via rebase or merge, based on whether the current branch contains merge commits. Use when pulling, syncing, or updating a branch from its target.
+description: Determine whether to use rebase or merge when pulling in upstream changes.
+when_to_use: When pulling, syncing, or updating a branch from its target. When another skill needs to decide between rebase and merge. Checks for merge commits on the current branch to avoid flattening them with a rebase.
 user-invocable: false
 ---
 
