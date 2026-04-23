@@ -1,3 +1,7 @@
+# pdot - [P]ush [Dot]files
+# pushd into the Codespace's dotfiles checkout.
+alias pdot='pushd /workspaces/.codespaces/.persistedshare/dotfiles'
+
 # ucs - [U]pdate [C]ode[S]pace
 # Pulls the latest dotfiles repo and re-runs install.sh to update the
 # Codespace with the latest configuration, then reloads the shell.
