@@ -15,7 +15,7 @@ link() {
     echo "Backing up $dst → ${dst}.backup"
     mv "$dst" "${dst}.backup"
   fi
-  ln -sf "$src" "$dst"
+  ln -sfn "$src" "$dst"
   echo "Linked $dst → $src"
 }
 
