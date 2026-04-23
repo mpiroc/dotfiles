@@ -1,14 +1,17 @@
 {
-  "effortLevel": "high",
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "disabledMcpjsonServers": [
+    "Sentry"
+  ],
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "disabledMcpjsonServers": ["Sentry"],
   "enabledPlugins": {
     "afk-agent-observability@pixee-internal-claude-plugins": false
-  }
+  },
+  "effortLevel": "high",
+  "skipAutoPermissionPrompt": true
 }
