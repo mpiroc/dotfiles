@@ -37,6 +37,14 @@ for skill in "$DOTFILES_DIR/claude/skills/"*; do
   link "$skill" "$CLAUDE_DIR/skills/$(basename "$skill")"
 done
 
+# Register a PAT-backed credential helper scoped to this repo only, so pushes
+# to mpiroc/dotfiles from a Codespace work even when the default token can't
+# write to it. Single quotes keep $DOTFILES_PAT literal so git expands it at
+# credential-lookup time (not at install time).
+git config --global --replace-all \
+  'credential.https://github.com/mpiroc/dotfiles.helper' \
+  '!f() { echo username=mpiroc; echo password=$DOTFILES_PAT; }; f'
+
 # Source shell aliases from shell profile files that exist.
 ALIASES_SRC="$DOTFILES_DIR/shell/aliases.sh"
 SOURCE_LINE=". \"$ALIASES_SRC\""
