@@ -41,7 +41,22 @@ done
 # to mpiroc/dotfiles from a Codespace work even when the default token can't
 # write to it. Single quotes keep $DOTFILES_PAT literal so git expands it at
 # credential-lookup time (not at install time).
+#
+# Two subtleties:
+#   1. useHttpPath must be enabled at a scope that matches without a path
+#      (host-only), otherwise git strips the path before matching and the
+#      per-repo scope below never applies.
+#   2. /etc/gitconfig in Codespaces unconditionally sets credential.helper to
+#      the default Codespaces helper, which answers first and short-circuits
+#      the chain. Setting helper to an empty string inside the per-repo scope
+#      resets the list for this URL so only our helper runs.
 git config --global --replace-all \
+  'credential.https://github.com.useHttpPath' \
+  'true'
+git config --global --replace-all \
+  'credential.https://github.com/mpiroc/dotfiles.helper' \
+  ''
+git config --global --add \
   'credential.https://github.com/mpiroc/dotfiles.helper' \
   '!f() { echo username=mpiroc; echo password=$DOTFILES_PAT; }; f'
 
