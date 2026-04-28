@@ -3,3 +3,11 @@
 - [Context is for dependencies, not data](feedback_context_vs_props.md) — Pure/Impure elimination is about injecting QueryClient/toast/form via providers, not preferring context over props in general
 - [Skip visual-verifier / visual-verification](feedback_skip_visual_verifier.md) — User has the skill disabled; never launch the subagent or suggest visual verification
 - [Answer questions before implementing](feedback_questions_vs_requests.md) — "Can we...?" / "Is it possible...?" means answer first, don't jump to implementation
+- [Orphan definition](feedback_orphan_definition.md) — standalone files (stories, tests) aren't orphaned just because a parent doc was deleted
+- [Concise conventions](feedback_concise_conventions.md) — keep convention/guideline additions minimal, not verbose multi-example blocks
+- [Reuse saved output](feedback_reuse_saved_output.md) — never re-run lint/test/typecheck to re-analyze; read saved output instead
+- [Pause for review on non-trivial refactors](feedback_review_before_commit.md) — stage cross-package or architectural changes and wait for review before committing
+- [Nullability Phase 1 philosophy](feedback_nullability_phase1_philosophy.md) — `.nullable().optional()` widenings on Phase-1 branches are intentional; narrowing is the Phase 3 PR's job
+- [Align spec and issue before implementation](feedback_spec_change_report.md) — spec via written report (for external agent); DevRev issue via direct MCP update; artifact plan defers implementation
+- [Skip visual-verifier in codespaces](feedback_no_visual_verifier_codespaces.md) — visual-verifier subagent doesn't work in this environment; substitute manual storybook/dev:mocks check or rely on Playwright VRT
+- [No raw line numbers in comments](feedback_no_line_numbers_in_comments.md) — reference symbols/schemas in suppression comments and PRs, not "see lines NN/MM"
