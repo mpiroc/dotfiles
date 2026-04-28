@@ -4,7 +4,8 @@ Shared developer environment configuration, including [Claude Code](https://docs
 
 ## What's included
 
-- **`claude/`** -- Claude Code configuration (settings, agents, statusline, `CLAUDE.md`)
+- **`claude/`** -- Claude Code configuration (settings, agents, skills, statusline, `CLAUDE.md`)
+- **`claude/memory/`** -- Per-project memories (`MEMORY.md`, `feedback_*.md`, etc.) symlinked into `~/.claude/projects/<slug>/memory/` so they sync across machines while session jsonls and other machine-local state stay put
 - **`shell/aliases.sh`** -- Shell aliases and functions (works in both bash and zsh)
 - **`install.sh`** -- Symlinks config into `~/.claude/` and sources aliases from your shell profile
 

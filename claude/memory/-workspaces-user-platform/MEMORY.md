@@ -1,0 +1,5 @@
+- [Query options input type pattern](feedback_query_options_pattern.md) — Use intersection with Omit<UseQueryOptions>, no Partial wrapper, for get*Options hooks
+- [Always use testing skills](feedback_use_testing_skills.md) — Never run test commands directly; use running-vitest-tests, running-e2e-tests, typechecking-code, linting-code skills
+- [Context is for dependencies, not data](feedback_context_vs_props.md) — Pure/Impure elimination is about injecting QueryClient/toast/form via providers, not preferring context over props in general
+- [Skip visual-verifier / visual-verification](feedback_skip_visual_verifier.md) — User has the skill disabled; never launch the subagent or suggest visual verification
+- [Answer questions before implementing](feedback_questions_vs_requests.md) — "Can we...?" / "Is it possible...?" means answer first, don't jump to implementation

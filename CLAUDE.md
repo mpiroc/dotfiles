@@ -21,6 +21,7 @@ This symlinks everything in `claude/` into `~/.claude/` and appends a source lin
 - `claude/statusline-command.sh` -- Custom statusline script (reads JSON from stdin, outputs ANSI-colored status)
 - `claude/agents/` -- Custom agent definitions (each file symlinked individually to `~/.claude/agents/`)
 - `claude/skills/` -- Custom skill definitions (each directory symlinked individually to `~/.claude/skills/`); each skill is a directory containing a `SKILL.md` entrypoint
+- `claude/memory/` -- Per-project Claude memory dirs (each subdir symlinked to `~/.claude/projects/<slug>/memory/`); slugs encode absolute working-directory paths so they sync across Codespaces but local machines need their own entries
 - `shell/aliases.sh` -- Shell aliases/functions sourced by bash and zsh; must use POSIX-compatible syntax
 - `install.sh` -- Installer script; uses `set -euo pipefail`
 
