@@ -187,11 +187,25 @@ _ucs_run() {
     return 2
   fi
   _ucs_sync_local_memories || return 1
-  # Try to populate refs/remotes/origin/$branch so --force-with-lease has a
-  # known expected value. Ignore failure: branch may not exist remotely yet.
-  git fetch origin "$branch" 2>/dev/null || true
-  if git rev-parse --verify --quiet "refs/remotes/origin/$branch" >/dev/null; then
-    git push --force-with-lease origin "$branch" || return 1
+  # Push with --force-with-lease (rebase rewrote history). Codespaces
+  # narrows the default fetch refspec to `+refs/heads/main:…/origin/main`,
+  # so a plain `git fetch origin <branch>` only updates FETCH_HEAD and
+  # never populates refs/remotes/origin/<branch> for non-main branches.
+  # That left --force-with-lease with no lease to verify and ucs fell back
+  # to a plain `git push -u`, which is rejected as non-fast-forward
+  # whenever rebase rewrote history. Detect remote branch existence with
+  # ls-remote and use an explicit refspec on the fetch so the remote-
+  # tracking ref is populated regardless of the configured fetch refspec.
+  if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null 2>&1; then
+    git fetch --prune origin "+refs/heads/$branch:refs/remotes/origin/$branch" || return 1
+    # `--force-with-lease` (no args) doesn't reliably read the freshly-fetched
+    # ref under Codespaces' narrow fetch refspec — it produces "stale info"
+    # rejections even when refs/remotes/origin/<branch> is up to date. Use
+    # the explicit `--force-with-lease=<branch>:<sha>` form, pinning the lease
+    # to the SHA we just fetched.
+    local lease_sha
+    lease_sha=$(git rev-parse "refs/remotes/origin/$branch") || return 1
+    git push --force-with-lease="$branch:$lease_sha" origin "$branch" || return 1
   else
     git push -u origin "$branch" || return 1
   fi
