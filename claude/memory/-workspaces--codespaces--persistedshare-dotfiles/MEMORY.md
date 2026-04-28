@@ -1,0 +1,1 @@
+- [gh CLI should use DOTFILES_PAT](feedback_gh_uses_dotfiles_pat.md) — prefix `gh` write commands in this Codespace with `GH_TOKEN="$DOTFILES_PAT"`; the default token lacks scopes.
