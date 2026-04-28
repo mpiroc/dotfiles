@@ -197,8 +197,15 @@ _ucs_run() {
   # ls-remote and use an explicit refspec on the fetch so the remote-
   # tracking ref is populated regardless of the configured fetch refspec.
   if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null 2>&1; then
-    git fetch origin "+refs/heads/$branch:refs/remotes/origin/$branch" || return 1
-    git push --force-with-lease origin "$branch" || return 1
+    git fetch --prune origin "+refs/heads/$branch:refs/remotes/origin/$branch" || return 1
+    # `--force-with-lease` (no args) doesn't reliably read the freshly-fetched
+    # ref under Codespaces' narrow fetch refspec — it produces "stale info"
+    # rejections even when refs/remotes/origin/<branch> is up to date. Use
+    # the explicit `--force-with-lease=<branch>:<sha>` form, pinning the lease
+    # to the SHA we just fetched.
+    local lease_sha
+    lease_sha=$(git rev-parse "refs/remotes/origin/$branch") || return 1
+    git push --force-with-lease="$branch:$lease_sha" origin "$branch" || return 1
   else
     git push -u origin "$branch" || return 1
   fi
