@@ -37,6 +37,18 @@ for skill in "$DOTFILES_DIR/claude/skills/"*; do
   link "$skill" "$CLAUDE_DIR/skills/$(basename "$skill")"
 done
 
+# Symlink per-project memory directories. Each subdirectory of claude/memory/
+# corresponds to a project slug under ~/.claude/projects/. Slugs encode the
+# absolute working-directory path, so they are stable across Codespaces but
+# differ on local machines.
+for memdir in "$DOTFILES_DIR/claude/memory/"*; do
+  slug="$(basename "$memdir")"
+  [ "$slug" = ".gitkeep" ] && continue
+  [ -d "$memdir" ] || continue
+  mkdir -p "$CLAUDE_DIR/projects/$slug"
+  link "$memdir" "$CLAUDE_DIR/projects/$slug/memory"
+done
+
 # Register a PAT-backed credential helper scoped to this repo only, so pushes
 # to mpiroc/dotfiles from a Codespace work even when the default token can't
 # write to it. Single quotes keep $DOTFILES_PAT literal so git expands it at
