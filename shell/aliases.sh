@@ -3,9 +3,64 @@
 alias pdot='pushd /workspaces/.codespaces/.persistedshare/dotfiles'
 
 # ucs - [U]pdate [C]ode[S]pace
-# Pulls the latest dotfiles repo and re-runs install.sh to update the
-# Codespace with the latest configuration, then reloads the shell.
-alias ucs='pushd /workspaces/.codespaces/.persistedshare/dotfiles/ && git pull && ./install.sh && popd && source ~/.bashrc'
+# Each machine stays on its own branch (codespace/<CODESPACE_NAME> in
+# Codespaces, machine/<hostname> elsewhere) so memory edits from different
+# machines don't fight on a shared branch. ucs fetches origin/main, rebases
+# the per-machine branch on top, force-with-lease pushes it, then re-runs
+# install.sh and reloads the shell.
+#
+# Failures:
+# - Refuses to run with uncommitted changes (commit or stash first).
+# - On rebase conflicts, leaves the user in the dotfiles dir mid-rebase so
+#   they can resolve, run `git rebase --continue`, and re-run `ucs`.
+unalias ucs 2>/dev/null
+_ucs_run() {
+  local branch=$1
+  if ! git diff-index --quiet HEAD --; then
+    echo "ucs: uncommitted changes in $PWD; commit or stash first" >&2
+    return 1
+  fi
+  git fetch origin main || return 1
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    git checkout "$branch" || return 1
+  else
+    echo "ucs: creating per-machine branch $branch from origin/main"
+    git checkout -b "$branch" origin/main || return 1
+  fi
+  if ! git rebase origin/main; then
+    echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
+    return 2
+  fi
+  # Try to populate refs/remotes/origin/$branch so --force-with-lease has a
+  # known expected value. Ignore failure: branch may not exist remotely yet.
+  git fetch origin "$branch" 2>/dev/null || true
+  if git rev-parse --verify --quiet "refs/remotes/origin/$branch" >/dev/null; then
+    git push --force-with-lease origin "$branch" || return 1
+  else
+    git push -u origin "$branch" || return 1
+  fi
+  ./install.sh
+}
+ucs() {
+  local dotfiles_dir=/workspaces/.codespaces/.persistedshare/dotfiles
+  local orig_pwd=$PWD branch rc
+  if [ -n "${CODESPACE_NAME:-}" ]; then
+    branch="codespace/$CODESPACE_NAME"
+  else
+    branch="machine/$(uname -n)"
+  fi
+  cd "$dotfiles_dir" || return 1
+  _ucs_run "$branch"
+  rc=$?
+  # rc=2 means rebase conflict — stay in dotfiles dir so the user can resolve.
+  if [ $rc -ne 2 ]; then
+    cd "$orig_pwd"
+  fi
+  if [ $rc -eq 0 ]; then
+    . ~/.bashrc
+  fi
+  return $rc
+}
 
 # ucc - [U]pdate [C]laude [C]ode
 # Intended to be run at the start of a work day. Pulls the latest changes,

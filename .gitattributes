@@ -1,0 +1,7 @@
+# MEMORY.md is a flat list of pointers; per-machine branches will frequently
+# add different bullets. The built-in union driver concatenates added lines
+# from both sides instead of emitting conflict markers, which is exactly what
+# we want during `ucs` rebases. Other memory files (feedback_*.md, etc.) stay
+# on the default driver — same-file edits there usually indicate a real
+# conflict that should be resolved by hand.
+claude/memory/**/MEMORY.md merge=union

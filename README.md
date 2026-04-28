@@ -13,11 +13,22 @@ Shared developer environment configuration, including [Claude Code](https://docs
 
 #### `ucs` -- [U]pdate [C]ode[S]pace
 
-Pulls the latest dotfiles repo and re-runs `install.sh` to update the Codespace with the latest configuration, then reloads the shell.
-
 ```sh
 ucs
 ```
+
+Updates the Codespace with the latest dotfiles configuration:
+
+1. Switches to (or creates) a per-machine branch — `codespace/$CODESPACE_NAME` in Codespaces, `machine/$(hostname)` elsewhere.
+2. Fetches `origin/main` and rebases the per-machine branch on top.
+3. Force-with-lease pushes the per-machine branch.
+4. Re-runs `install.sh` and reloads the shell.
+
+Per-machine branches keep memory edits from different machines from fighting on a shared branch. To promote your machine's changes to `main`, open a PR from your `codespace/...` branch — `ucs` itself only handles the local sync direction.
+
+`MEMORY.md` files use the built-in `union` merge driver (configured in `.gitattributes`), so two machines adding different bullets to the same MEMORY.md auto-merge instead of producing conflict markers.
+
+**Refuses to run with uncommitted changes.** Commit (or stash) first. On rebase conflicts, leaves you in the dotfiles dir mid-rebase — resolve, `git rebase --continue`, then re-run `ucs`.
 
 #### `ucc` -- [U]pdate [C]laude [C]ode
 
