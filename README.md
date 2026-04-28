@@ -21,7 +21,7 @@ Updates the Codespace with the latest dotfiles configuration:
 
 1. Switches to (or creates) a per-machine branch — `codespace/$CODESPACE_NAME` in Codespaces, `machine/$(hostname)` elsewhere.
 2. Fetches `origin/main` and rebases the per-machine branch on top.
-3. Auto-seeds any project memory dirs (`~/.claude/projects/<slug>/memory/`) that are still real directories on this machine: moves them into `claude/memory/<slug>/`, replaces the live path with a symlink, and commits in one go. Subsequent `ucs` runs (and other machines, after the per-machine branch is PR'd to `main`) keep them in sync.
+3. Syncs local project memory dirs into the repo. **Seeds** any slug that's still a real directory on this machine and not yet tracked (moves it into `claude/memory/<slug>/`, replaces the live path with a symlink). **Merges** local content into already-tracked slugs: union-merges `MEMORY.md`, copies non-conflicting files into the repo, and prints `ucs: conflict for <slug>/<file>` for any non-`MEMORY.md` file that exists on both sides with different content (left as-is for manual resolution). The recovery case where `memory` is already a symlink but `memory.backup/` still has unmerged content is handled the same way.
 4. Force-with-lease pushes the per-machine branch.
 5. Re-runs `install.sh` and reloads the shell.
 

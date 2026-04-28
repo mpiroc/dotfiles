@@ -6,55 +6,157 @@ alias pdot='pushd /workspaces/.codespaces/.persistedshare/dotfiles'
 # Each machine stays on its own branch (codespace/<CODESPACE_NAME> in
 # Codespaces, machine/<hostname> elsewhere) so memory edits from different
 # machines don't fight on a shared branch. ucs fetches origin/main, rebases
-# the per-machine branch on top, auto-seeds any project memory dirs that
-# aren't in the repo yet, force-with-lease pushes, then re-runs install.sh
-# and reloads the shell.
+# the per-machine branch on top, syncs local project memory dirs into the
+# repo (seeding new slugs and merging local content into already-tracked
+# slugs), force-with-lease pushes, then re-runs install.sh and reloads the
+# shell.
 #
 # Failures:
 # - Refuses to run with uncommitted changes (commit or stash first).
 # - On rebase conflicts, leaves the user in the dotfiles dir mid-rebase so
 #   they can resolve, run `git rebase --continue`, and re-run `ucs`.
 unalias ucs 2>/dev/null
-# Detect any project memory dirs at ~/.claude/projects/<slug>/memory/ that
-# are still real directories on this machine (not yet symlinked into the
-# repo) and seed them: mv the content into claude/memory/<slug>/, replace
-# the live path with a symlink, and commit on the per-machine branch in a
-# single commit covering all slugs seeded in this run. install.sh's
-# existing memory loop will then manage them like any other tracked slug.
-_ucs_seed_new_slugs() {
-  local seeded_count=0
-  local seeded_list=""
-  local proj_dir slug live_memory
+# Sync each ~/.claude/projects/<slug>/ into the repo. Two cases dispatch
+# off slug state:
+#
+#   * SEED — live memory/ is a non-empty real dir AND the slug is not yet
+#     tracked in claude/memory/. mv the content into the repo and replace
+#     the live path with a symlink.
+#   * MERGE — local content exists for a slug that's already tracked.
+#     Source is either the live memory/ dir (if real and non-empty) or
+#     memory.backup/ (recovery case after an earlier install.sh moved an
+#     unmerged real dir aside). Per-file rules:
+#       - MEMORY.md: union-merge unique lines (matches the existing
+#         merge=union .gitattributes rule used during git rebase).
+#       - Other file present only in source: copy into the repo.
+#       - Other file present in both with matching content: no-op.
+#       - Other file present in both with different content: skip and
+#         print a "conflict for <slug>/<f>" warning; user resolves later.
+#     cp is used (not mv) so the source dir keeps a snapshot — for the
+#     live-dir case, install.sh later moves it aside as memory.backup/.
+#
+# All seed/merge results are staged and a single commit covers the run.
+_ucs_sync_local_memories() {
+  local seeded_count=0 merged_count=0
+  local seeded_list="" merged_list=""
+  local proj_dir slug live_memory backup_memory repo_memory
+  local src_dir mode any_change sf bn target tmp
   for proj_dir in "$HOME/.claude/projects/"*/; do
     [ -d "$proj_dir" ] || continue
     slug=$(basename "$proj_dir")
     live_memory="${proj_dir}memory"
-    [ -L "$live_memory" ] && continue
-    [ -d "$live_memory" ] || continue
-    [ -z "$(ls -A "$live_memory" 2>/dev/null)" ] && continue
-    [ -e "claude/memory/$slug" ] && continue
+    backup_memory="${proj_dir}memory.backup"
+    repo_memory="claude/memory/$slug"
 
-    echo "ucs: seeding new slug into the repo: $slug"
-    if ! mv "$live_memory" "claude/memory/$slug"; then
-      echo "ucs: mv failed for $slug; aborting seed step" >&2
-      return 1
+    src_dir=""
+    mode=""
+    if [ -L "$live_memory" ]; then
+      # Already-managed slug. Recovery case if memory.backup has content.
+      if [ -d "$backup_memory" ] && [ ! -L "$backup_memory" ] \
+         && [ -n "$(ls -A "$backup_memory" 2>/dev/null)" ]; then
+        if [ -e "$repo_memory" ]; then
+          src_dir="$backup_memory"
+          mode=merge
+        else
+          echo "ucs: $slug has memory symlink + backup but slug missing from repo; skipping" >&2
+          continue
+        fi
+      else
+        continue
+      fi
+    elif [ -d "$live_memory" ]; then
+      if [ -z "$(ls -A "$live_memory" 2>/dev/null)" ]; then
+        continue
+      elif [ -e "$repo_memory" ]; then
+        src_dir="$live_memory"
+        mode=merge
+      else
+        mode=seed
+      fi
+    else
+      continue
     fi
-    if ! ln -sfn "$PWD/claude/memory/$slug" "$live_memory"; then
-      echo "ucs: failed to create symlink for $slug; moving content back" >&2
-      mv "claude/memory/$slug" "$live_memory" || true
-      return 1
-    fi
-    git add "claude/memory/$slug" || return 1
-    seeded_count=$((seeded_count + 1))
-    seeded_list="${seeded_list}- ${slug}
+
+    if [ "$mode" = seed ]; then
+      echo "ucs: seeding new slug into the repo: $slug"
+      if ! mv "$live_memory" "$repo_memory"; then
+        echo "ucs: mv failed for $slug; aborting" >&2
+        return 1
+      fi
+      if ! ln -sfn "$PWD/$repo_memory" "$live_memory"; then
+        echo "ucs: failed to create symlink for $slug; moving content back" >&2
+        mv "$repo_memory" "$live_memory" || true
+        return 1
+      fi
+      git add "$repo_memory" || return 1
+      seeded_count=$((seeded_count + 1))
+      seeded_list="${seeded_list}- ${slug}
 "
+      continue
+    fi
+
+    # mode = merge
+    any_change=0
+    for sf in "$src_dir"/*; do
+      [ -e "$sf" ] || continue
+      bn=$(basename "$sf")
+      target="$repo_memory/$bn"
+      if [ "$bn" = "MEMORY.md" ]; then
+        if [ -f "$target" ]; then
+          if ! cmp -s "$target" "$sf"; then
+            tmp=$(mktemp) || return 1
+            cat "$target" "$sf" | awk '!seen[$0]++' > "$tmp"
+            if ! cmp -s "$target" "$tmp"; then
+              mv "$tmp" "$target" || { rm -f "$tmp"; return 1; }
+              git add "$target" || return 1
+              any_change=1
+            else
+              rm -f "$tmp"
+            fi
+          fi
+        else
+          cp "$sf" "$target" || return 1
+          git add "$target" || return 1
+          any_change=1
+        fi
+      else
+        if [ ! -e "$target" ]; then
+          cp "$sf" "$target" || return 1
+          git add "$target" || return 1
+          any_change=1
+        elif ! cmp -s "$target" "$sf"; then
+          echo "ucs: conflict for $slug/$bn — repo and local differ; left both as-is" >&2
+        fi
+      fi
+    done
+
+    if [ "$any_change" -eq 1 ]; then
+      echo "ucs: merged local content into repo slug: $slug"
+      merged_count=$((merged_count + 1))
+      merged_list="${merged_list}- ${slug}
+"
+    fi
   done
 
-  if [ "$seeded_count" -gt 0 ]; then
-    git commit -m "Auto-seed memory slugs detected by ucs
-
-${seeded_list}" || return 1
+  if [ $((seeded_count + merged_count)) -eq 0 ]; then
+    return 0
   fi
+
+  local msg
+  msg="ucs: sync local memory dirs"
+  if [ "$seeded_count" -gt 0 ]; then
+    msg="${msg}
+
+Seeded:
+${seeded_list}"
+  fi
+  if [ "$merged_count" -gt 0 ]; then
+    msg="${msg}
+
+Merged into existing slugs:
+${merged_list}"
+  fi
+  git commit -m "$msg" || return 1
 }
 _ucs_run() {
   local branch=$1
@@ -84,7 +186,7 @@ _ucs_run() {
     echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
     return 2
   fi
-  _ucs_seed_new_slugs || return 1
+  _ucs_sync_local_memories || return 1
   # Try to populate refs/remotes/origin/$branch so --force-with-lease has a
   # known expected value. Ignore failure: branch may not exist remotely yet.
   git fetch origin "$branch" 2>/dev/null || true
