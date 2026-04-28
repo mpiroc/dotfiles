@@ -21,8 +21,9 @@ Updates the Codespace with the latest dotfiles configuration:
 
 1. Switches to (or creates) a per-machine branch — `codespace/$CODESPACE_NAME` in Codespaces, `machine/$(hostname)` elsewhere.
 2. Fetches `origin/main` and rebases the per-machine branch on top.
-3. Force-with-lease pushes the per-machine branch.
-4. Re-runs `install.sh` and reloads the shell.
+3. Auto-seeds any project memory dirs (`~/.claude/projects/<slug>/memory/`) that are still real directories on this machine: moves them into `claude/memory/<slug>/`, replaces the live path with a symlink, and commits in one go. Subsequent `ucs` runs (and other machines, after the per-machine branch is PR'd to `main`) keep them in sync.
+4. Force-with-lease pushes the per-machine branch.
+5. Re-runs `install.sh` and reloads the shell.
 
 Per-machine branches keep memory edits from different machines from fighting on a shared branch. To promote your machine's changes to `main`, open a PR from your `codespace/...` branch — `ucs` itself only handles the local sync direction.
 

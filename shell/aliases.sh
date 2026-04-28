@@ -6,14 +6,56 @@ alias pdot='pushd /workspaces/.codespaces/.persistedshare/dotfiles'
 # Each machine stays on its own branch (codespace/<CODESPACE_NAME> in
 # Codespaces, machine/<hostname> elsewhere) so memory edits from different
 # machines don't fight on a shared branch. ucs fetches origin/main, rebases
-# the per-machine branch on top, force-with-lease pushes it, then re-runs
-# install.sh and reloads the shell.
+# the per-machine branch on top, auto-seeds any project memory dirs that
+# aren't in the repo yet, force-with-lease pushes, then re-runs install.sh
+# and reloads the shell.
 #
 # Failures:
 # - Refuses to run with uncommitted changes (commit or stash first).
 # - On rebase conflicts, leaves the user in the dotfiles dir mid-rebase so
 #   they can resolve, run `git rebase --continue`, and re-run `ucs`.
 unalias ucs 2>/dev/null
+# Detect any project memory dirs at ~/.claude/projects/<slug>/memory/ that
+# are still real directories on this machine (not yet symlinked into the
+# repo) and seed them: mv the content into claude/memory/<slug>/, replace
+# the live path with a symlink, and commit on the per-machine branch in a
+# single commit covering all slugs seeded in this run. install.sh's
+# existing memory loop will then manage them like any other tracked slug.
+_ucs_seed_new_slugs() {
+  local seeded_count=0
+  local seeded_list=""
+  local proj_dir slug live_memory
+  for proj_dir in "$HOME/.claude/projects/"*/; do
+    [ -d "$proj_dir" ] || continue
+    slug=$(basename "$proj_dir")
+    live_memory="${proj_dir}memory"
+    [ -L "$live_memory" ] && continue
+    [ -d "$live_memory" ] || continue
+    [ -z "$(ls -A "$live_memory" 2>/dev/null)" ] && continue
+    [ -e "claude/memory/$slug" ] && continue
+
+    echo "ucs: seeding new slug into the repo: $slug"
+    if ! mv "$live_memory" "claude/memory/$slug"; then
+      echo "ucs: mv failed for $slug; aborting seed step" >&2
+      return 1
+    fi
+    if ! ln -sfn "$PWD/claude/memory/$slug" "$live_memory"; then
+      echo "ucs: failed to create symlink for $slug; moving content back" >&2
+      mv "claude/memory/$slug" "$live_memory" || true
+      return 1
+    fi
+    git add "claude/memory/$slug" || return 1
+    seeded_count=$((seeded_count + 1))
+    seeded_list="${seeded_list}- ${slug}
+"
+  done
+
+  if [ "$seeded_count" -gt 0 ]; then
+    git commit -m "Auto-seed memory slugs detected by ucs
+
+${seeded_list}" || return 1
+  fi
+}
 _ucs_run() {
   local branch=$1
   if ! git diff-index --quiet HEAD --; then
@@ -42,6 +84,7 @@ _ucs_run() {
     echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
     return 2
   fi
+  _ucs_seed_new_slugs || return 1
   # Try to populate refs/remotes/origin/$branch so --force-with-lease has a
   # known expected value. Ignore failure: branch may not exist remotely yet.
   git fetch origin "$branch" 2>/dev/null || true
