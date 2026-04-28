@@ -24,8 +24,19 @@ _ucs_run() {
   if git show-ref --verify --quiet "refs/heads/$branch"; then
     git checkout "$branch" || return 1
   else
-    echo "ucs: creating per-machine branch $branch from origin/main"
-    git checkout -b "$branch" origin/main || return 1
+    # Bootstrap from local 'main' (or fall back to origin/main if absent) so
+    # any local-only commits sitting on main — typically memory updates that
+    # were committed before this machine's first ucs run — are carried into
+    # the per-machine branch instead of being stranded. The subsequent
+    # `git rebase origin/main` integrates anything new from other machines.
+    local base
+    if git show-ref --verify --quiet "refs/heads/main"; then
+      base=main
+    else
+      base=origin/main
+    fi
+    echo "ucs: creating per-machine branch $branch from $base"
+    git checkout -b "$branch" "$base" || return 1
   fi
   if ! git rebase origin/main; then
     echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
