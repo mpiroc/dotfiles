@@ -11,3 +11,13 @@
 - [Align spec and issue before implementation](feedback_spec_change_report.md) — spec via written report (for external agent); DevRev issue via direct MCP update; artifact plan defers implementation
 - [Skip visual-verifier in codespaces](feedback_no_visual_verifier_codespaces.md) — visual-verifier subagent doesn't work in this environment; substitute manual storybook/dev:mocks check or rely on Playwright VRT
 - [No raw line numbers in comments](feedback_no_line_numbers_in_comments.md) — reference symbols/schemas in suppression comments and PRs, not "see lines NN/MM"
+- [No auto-commit](feedback_no_auto_commit.md) — Don't commit unless explicitly asked; user wants to review first
+- [Use real QueryClient in tests](feedback_real_query_client_in_tests.md) — Use useQueryClient() from provider, not standalone mock QueryClients
+- [Stay within issue scope](feedback_scope_discipline.md) — Refactoring issues are behavioral no-ops; don't add features from dependent issues
+- [Always plan before refactoring](feedback_always_plan_refactors.md) — Present a plan before non-trivial refactors; don't jump into implementation
+- [BDD style for new tests](feedback_bdd_style_tests.md) — Use `it()` not `test()` in new test suites
+- [SSE schemas not in OpenAPI](feedback_sse_schemas_not_in_openapi.md) — Hand-maintained; don't claim OpenAPI/Zod sync applies to SSE event changes
+- [Cross-repo issue framing](feedback_cross_repo_issue_framing.md) — Ground cross-team DevRev issues in the target team's codebase, not the consumer's
+- [analysis-service local clone](reference_analysis_service_clone.md) — Clone at /workspaces/analysis-service; pull latest before reading; CAPL-28 / DEVU-19
+- [Branch-wide test responsibility](feedback_branch_wide_test_responsibility.md) — Every failure on the branch is mine; reject "not recent", "other session", "unexpected", "flaky without evidence"
+- [Suspense queries when inlining query data](feedback_suspense_for_inlined_queries.md) — When moving a query out of props into the component, use the suspense variant (create one if missing)
