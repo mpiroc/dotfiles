@@ -1,2 +1,3 @@
 - [DevRev issue-closing syntax in PR descriptions](feedback_devrev_pr_close_syntax.md) — use `/close ISS-XXXX` in PR bodies, not GitHub's `Closes`
 - [Don't take over pre-existing user state — defer, then resume](feedback_pre_existing_user_state.md) — do the safe work, queue the conflicting steps, ask the user to clear the conflict, then flush the queue when they confirm
+- [figma-console-mcp doesn't fit Codespaces-primary use](project_figma_console_codespaces.md) — figma plugin intentionally omits it; Desktop-Bridge-dependent features unreachable from codespaces
