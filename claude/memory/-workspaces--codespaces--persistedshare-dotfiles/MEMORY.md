@@ -1,1 +1,2 @@
 - [gh CLI should use DOTFILES_PAT](feedback_gh_uses_dotfiles_pat.md) — prefix `gh` write commands in this Codespace with `GH_TOKEN="$DOTFILES_PAT"`; the default token lacks scopes.
+- [ucs must preserve local edits](feedback_ucs_must_preserve_local_edits.md) — `ucs` exists to sync local memory edits; it must never abort or discard them. Expected pattern: auto-stash + auto-commit memory dirt.
