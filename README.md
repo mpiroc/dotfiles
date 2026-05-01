@@ -29,7 +29,7 @@ Per-machine branches keep memory edits from different machines from fighting on 
 
 `MEMORY.md` files use the built-in `union` merge driver (configured in `.gitattributes`), so two machines adding different bullets to the same MEMORY.md auto-merge instead of producing conflict markers.
 
-**Refuses to run with uncommitted changes.** Commit (or stash) first. On rebase conflicts, leaves you in the dotfiles dir mid-rebase — resolve, `git rebase --continue`, then re-run `ucs`.
+**Local edits are preserved.** `ucs` auto-stashes the working tree before the rebase and pops it back afterward. Memory-file dirt (typically a Claude session writing through the `~/.claude/projects/<slug>/memory` symlinks) is then staged and committed by step 3; non-memory dirt stays in the working tree exactly where it was. On rebase conflicts, leaves you in the dotfiles dir mid-rebase — resolve, `git rebase --continue`, then `git stash pop` to restore your edits, then re-run `ucs`. On stash-pop conflicts, resolve in place, `git stash drop` when done, then re-run.
 
 #### `ucc` -- [U]pdate [C]laude [C]ode
 

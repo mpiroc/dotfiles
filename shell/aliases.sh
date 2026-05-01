@@ -41,6 +41,11 @@ _ucs_sync_local_memories() {
   local seeded_list="" merged_list=""
   local proj_dir slug live_memory backup_memory repo_memory
   local src_dir mode any_change sf bn target tmp
+  # Stage any pre-existing dirt under claude/memory/ — typically a Claude
+  # session writing MEMORY.md through the symlink, restored by the auto-stash
+  # pop in _ucs_run. The seed/merge loop adds individual paths below; this
+  # sweeps in whatever was already there.
+  git add claude/memory/ || return 1
   for proj_dir in "$HOME/.claude/projects/"*/; do
     [ -d "$proj_dir" ] || continue
     slug=$(basename "$proj_dir")
@@ -138,7 +143,7 @@ _ucs_sync_local_memories() {
     fi
   done
 
-  if [ $((seeded_count + merged_count)) -eq 0 ]; then
+  if [ $((seeded_count + merged_count)) -eq 0 ] && git diff --cached --quiet; then
     return 0
   fi
 
@@ -160,9 +165,16 @@ ${merged_list}"
 }
 _ucs_run() {
   local branch=$1
-  if ! git diff-index --quiet HEAD --; then
-    echo "ucs: uncommitted changes in $PWD; commit or stash first" >&2
-    return 1
+  # Auto-stash any local edits so the rebase can run on a clean tree. Memory
+  # edits (Claude sessions writing through the ~/.claude/projects/<slug>/memory
+  # symlinks) are the expected steady-state dirt, so aborting on them would
+  # defeat the purpose of ucs. The pop after rebase puts everything back; the
+  # sync step below stages and commits any restored memory dirt, while
+  # non-memory dirt stays in the working tree exactly where the user had it.
+  local stashed=0
+  if [ -n "$(git status --porcelain)" ]; then
+    git stash push --include-untracked -m "ucs auto-stash" || return 1
+    stashed=1
   fi
   git fetch origin main || return 1
   if git show-ref --verify --quiet "refs/heads/$branch"; then
@@ -183,8 +195,18 @@ _ucs_run() {
     git checkout -b "$branch" "$base" || return 1
   fi
   if ! git rebase origin/main; then
-    echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
+    if [ "$stashed" = 1 ]; then
+      echo "ucs: rebase conflicts. Resolve in $PWD, run 'git rebase --continue', then 'git stash pop' to restore your local edits, then re-run ucs." >&2
+    else
+      echo "ucs: rebase conflicts. Resolve in $PWD, then 'git rebase --continue' and re-run ucs." >&2
+    fi
     return 2
+  fi
+  if [ "$stashed" = 1 ]; then
+    if ! git stash pop; then
+      echo "ucs: stash pop conflict restoring your local edits. Resolve in $PWD, run 'git stash drop' when done, then re-run ucs." >&2
+      return 2
+    fi
   fi
   _ucs_sync_local_memories || return 1
   # Push with --force-with-lease (rebase rewrote history). Codespaces
