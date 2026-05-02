@@ -1,0 +1,2 @@
+- [Don't claim Bash tool calls run in parallel](feedback_parallel_tool_calls.md) — Bash calls in one tool-use block execute sequentially in this env; don't claim otherwise
+- [Don't assume gender pronouns](feedback_no_pronoun_assumptions.md) — default to they/them or the person's name/handle when pronouns aren't established
