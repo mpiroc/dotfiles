@@ -12,6 +12,7 @@
 - [Skip visual-verifier in codespaces](feedback_no_visual_verifier_codespaces.md) — visual-verifier subagent doesn't work in this environment; substitute manual storybook/dev:mocks check or rely on Playwright VRT
 - [No raw line numbers in comments](feedback_no_line_numbers_in_comments.md) — reference symbols/schemas in suppression comments and PRs, not "see lines NN/MM"
 - [No auto-commit](feedback_no_auto_commit.md) — Don't commit unless explicitly asked; user wants to review first
+- [Branch before committing](feedback_branch_before_committing.md) — On user-platform, never commit on main; create a feature branch first even when explicitly asked to "commit"
 - [Use real QueryClient in tests](feedback_real_query_client_in_tests.md) — Use useQueryClient() from provider, not standalone mock QueryClients
 - [Stay within issue scope](feedback_scope_discipline.md) — Refactoring issues are behavioral no-ops; don't add features from dependent issues
 - [Always plan before refactoring](feedback_always_plan_refactors.md) — Present a plan before non-trivial refactors; don't jump into implementation
@@ -21,3 +22,6 @@
 - [analysis-service local clone](reference_analysis_service_clone.md) — Clone at /workspaces/analysis-service; pull latest before reading; CAPL-28 / DEVU-19
 - [Branch-wide test responsibility](feedback_branch_wide_test_responsibility.md) — Every failure on the branch is mine; reject "not recent", "other session", "unexpected", "flaky without evidence"
 - [Suspense queries when inlining query data](feedback_suspense_for_inlined_queries.md) — When moving a query out of props into the component, use the suspense variant (create one if missing)
+- [TanStack Form migration is phased](project_form_migration_phases.md) — Phase 1 = state only (now); Phase 2 = validators; Phase 3 = Field API. Skill grows each phase.
+- [form.AppForm scope is the form component](project_form_appform_scope.md) — wrap only FooForm in form.AppForm, never the parent dialog/page/route
+- [Keep temporal context out of SKILL.md](feedback_skill_temporal_context.md) — track migration phases in DevRev issues + sibling README.md, not in the agent-visible SKILL body
