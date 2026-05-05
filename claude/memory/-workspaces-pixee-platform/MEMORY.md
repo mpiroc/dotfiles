@@ -1,3 +1,6 @@
 - [ADR-first for cross-cutting migrations](feedback_adr_before_migration.md) — draft an ADR-creation issue in product-os before an implementation issue
 - [Branch naming for issues](feedback_branch_naming.md) — use `ISS-XXXX-<kebab-title>`; preserve capitalization, include a short title
 - [Background monitor commands](feedback_background_monitors.md) — run `gh pr checks --watch`, `tail -f`, etc. with `run_in_background=true`
+- [Push first, CI in background, work while waiting](feedback_ci_first_workflow.md) — kick CI off early; do code review while waiting; validate locally only on failure
+- [Singletons are an anti-pattern and a last resort](feedback_singletons_last_resort.md) — never introduce @Singleton/@ApplicationScoped just to enable mocking
+- [Test through the public surface, not implementation details](feedback_test_public_surface.md) — don't extract helpers solely to enable direct unit testing; exercise the exposed surface instead
